@@ -286,6 +286,17 @@ describe("additive portable team backups", () => {
     }
   });
 
+  it("skips a __proto__ key in connector grants without adding an own key or a grant", () => {
+    const { store, routines, chief } = fixture();
+    const backup = createTeamBackup(store, routines.listRoutines(), "Granted team");
+    const tampered = JSON.parse(JSON.stringify(backup)) as { bots: { key: string; connectorTools: unknown }[] };
+    tampered.bots[0].connectorTools = JSON.parse('{"__proto__":{"tools":"*"}}');
+    const parsed = parseTeamBackup(tampered).bots.find((bot) => bot.key === chief.id)?.connectorTools ?? {};
+    expect(Object.getOwnPropertyNames(parsed)).not.toContain("__proto__");
+    expect(Object.keys(parsed)).toEqual([]);
+    expect(Object.getPrototypeOf(parsed)).toBe(Object.prototype);
+  });
+
   it("keeps a conversation that work from outside reached marked through backup and restore", () => {
     const { store, routines, chief } = fixture();
     const reached = store.createTask(chief.id, "Event chat", false)!.threadId;

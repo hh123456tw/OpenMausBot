@@ -117,6 +117,7 @@ describe("serviceSlugFor", () => {
     expect(serviceSlugFor("_SEND")).toBeNull();
     expect(serviceSlugFor("_1PASSWORD_LIST_ITEMS")).toBe("_1password");
     expect(serviceSlugFor("__PROTO_X")).toBeNull();
+    expect(serviceSlugFor("_1PASSWORDX_GET_ITEM")).toBe("_1passwordx");
   });
 });
 
@@ -124,6 +125,14 @@ describe("serviceSlugForCandidates", () => {
   it("prefers the longest known slug across an underscore boundary", () => {
     expect(serviceSlugForCandidates("BLAND_AI_MAKE_CALL", ["bland", "bland_ai"])).toBe("bland_ai");
     expect(serviceSlugForCandidates("GITHUB_CREATE_ISSUE", ["git", "github"])).toBe("github");
+  });
+
+  it("maps an underscore-leading tool to its slug and never to a longer or shorter lookalike", () => {
+    expect(serviceSlugForCandidates("_1PASSWORD_GET_ITEM", ["_1password"])).toBe("_1password");
+    expect(serviceSlugForCandidates("_1PASSWORDX_GET_ITEM", ["_1password"])).toBeNull();
+    expect(serviceSlugForCandidates("_1PASSWORD_GET_ITEM", ["_1passwordx"])).toBeNull();
+    expect(serviceSlugForCandidates("_1PASSWORD_GET_ITEM", ["_1", "_1password"])).toBe("_1password");
+    expect(serviceSlugForCandidates("_1PASSWORD_GET_ITEM", ["_1password", "_1password_get"])).toBe("_1password_get");
   });
 
   it("matches whole slug segments only and reports no match for the caller's fallback", () => {

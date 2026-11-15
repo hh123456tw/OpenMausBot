@@ -22,7 +22,7 @@ describe("connector advertisement allowlist env", () => {
   });
 
   it("round-trips a toolkit slug that starts with an underscore and still refuses __proto__", () => {
-    const record = grants({ _1password: { tools: ["ONEPASSWORD_GET_ITEM"] } });
+    const record = grants({ _1password: { tools: ["_1PASSWORD_GET_ITEM"] } });
     const { env } = serializeConnectorAllowedTools(record);
     expect(parseConnectorAllowedToolsEnv(env)).toEqual(record);
     expect(parseConnectorAllowedToolsEnv(JSON.stringify({ ["__proto__x"]: { tools: "*" } }))).toBeNull();

@@ -24,4 +24,20 @@ describe("parseConnectorTools tool names", () => {
       expect(parseConnectorTools({ _1password: { tools: [tool] } }).ok, tool).toBe(false);
     }
   });
+
+  it("caps a tool name at 128 characters in both the letter and underscore-leading forms", () => {
+    const accepted = (tool: string) => parseConnectorTools({ gmail: { tools: [tool] } }).ok;
+    expect(accepted("A".repeat(128))).toBe(true);
+    expect(accepted("A".repeat(129))).toBe(false);
+    expect(accepted("_" + "A".repeat(127))).toBe(true);
+    expect(accepted("_" + "A".repeat(128))).toBe(false);
+  });
+});
+
+describe("parseConnectorTools slug length", () => {
+  it("caps an underscore-leading slug at 82 characters", () => {
+    const accepted = (slug: string) => parseConnectorTools({ [slug]: { tools: "*" } }).ok;
+    expect(accepted("_" + "a".repeat(81))).toBe(true);
+    expect(accepted("_" + "a".repeat(82))).toBe(false);
+  });
 });
