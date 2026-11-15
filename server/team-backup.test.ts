@@ -258,6 +258,20 @@ describe("additive portable team backups", () => {
     expect(() => parseTeamBackup(tampered)).toThrow();
   });
 
+  it("accepts a backup that grants an underscore-leading toolkit and refuses other leading underscores", () => {
+    const { store, routines, chief } = fixture();
+    store.patchBot(chief.id, { connectorTools: { _1password: { tools: "*" } } });
+    const backup = createTeamBackup(store, routines.listRoutines(), "Granted team");
+    expect(parseTeamBackup(JSON.parse(JSON.stringify(backup))).bots.find((bot) => bot.key === chief.id)?.connectorTools).toEqual({
+      _1password: { tools: "*" },
+    });
+    for (const slug of ["__twice", "-bad", ""]) {
+      const tampered = JSON.parse(JSON.stringify(backup)) as { bots: { key: string; connectorTools: unknown }[] };
+      tampered.bots[0].connectorTools = JSON.parse(`{${JSON.stringify(slug)}:{"tools":"*"}}`);
+      expect(() => parseTeamBackup(tampered)).toThrow();
+    }
+  });
+
   it("keeps a conversation that work from outside reached marked through backup and restore", () => {
     const { store, routines, chief } = fixture();
     const reached = store.createTask(chief.id, "Event chat", false)!.threadId;

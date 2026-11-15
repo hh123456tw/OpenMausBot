@@ -15,4 +15,9 @@ describe("connector card requests", () => {
         .toThrow(expect.objectContaining({ status: 400, message: "authConfigId must be a Composio auth config id (ac_…)" }));
     }
   });
+
+  it("accepts one leading underscore in a slug and refuses the rest", () => {
+    expect(connectorRequestItems(["_1password", { toolkit: "_21RISK" }, "__proto__", "__twice", "", "-bad"]))
+      .toEqual([{ slug: "_1password" }, { slug: "_21risk" }]);
+  });
 });

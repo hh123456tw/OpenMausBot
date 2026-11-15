@@ -5,7 +5,9 @@ import {
   connectorToolAdvertised,
   filterToolsListFrame,
   parseConnectorAllowedToolsEnv,
+  parseConnectorServiceSlugsEnv,
   serializeConnectorAllowedTools,
+  serializeConnectorServiceSlugs,
 } from "./connector-advertisement.ts";
 import type { ConnectorToolGrant } from "../shared/wire.ts";
 
@@ -17,6 +19,22 @@ describe("connector advertisement allowlist env", () => {
     const { env, oversized } = serializeConnectorAllowedTools(record);
     expect(oversized).toBe(false);
     expect(parseConnectorAllowedToolsEnv(env)).toEqual(record);
+  });
+
+  it("round-trips a toolkit slug that starts with an underscore and still refuses __proto__", () => {
+    const record = grants({ _1password: { tools: ["ONEPASSWORD_GET_ITEM"] } });
+    const { env } = serializeConnectorAllowedTools(record);
+    expect(parseConnectorAllowedToolsEnv(env)).toEqual(record);
+    expect(parseConnectorAllowedToolsEnv(JSON.stringify({ ["__proto__x"]: { tools: "*" } }))).toBeNull();
+    expect(parseConnectorAllowedToolsEnv('{"__proto__":{"tools":"*"}}')).toBeNull();
+    expect(parseConnectorAllowedToolsEnv(JSON.stringify({ __twice: { tools: "*" } }))).toBeNull();
+    expect(parseConnectorAllowedToolsEnv(JSON.stringify({ "-bad": { tools: "*" } }))).toBeNull();
+  });
+
+  it("keeps an underscore-leading slug in the service slug env", () => {
+    const { env } = serializeConnectorServiceSlugs(["gmail", "_1password", "__proto__", "__twice", "", "-bad"]);
+    expect(parseConnectorServiceSlugsEnv(env)).toEqual(["gmail", "_1password"]);
+    expect(parseConnectorServiceSlugsEnv(JSON.stringify(["__proto__"]))).toEqual([]);
   });
 
   it("flags an allowlist past the 32 KB cap instead of truncating it", () => {

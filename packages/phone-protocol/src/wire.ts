@@ -250,8 +250,8 @@ export interface ConnectorToolGrant {
   tools: "*" | string[];
 }
 
-/** Lowercased Composio service slug, e.g. `gmail`. */
-export const CONNECTOR_SLUG_PATTERN = /^[a-z0-9][a-z0-9_-]{0,80}$/;
+/** Lowercased Composio service slug, e.g. `gmail`. One leading underscore is allowed because Composio spells `1password` as `_1password`; `__proto__` stays out. */
+export const CONNECTOR_SLUG_PATTERN = /^_?[a-z0-9][a-z0-9_-]{0,80}$/;
 /** Composio tool names are upper-snake, e.g. `GMAIL_SEND_EMAIL`. */
 export const CONNECTOR_TOOL_NAME_PATTERN = /^[A-Z][A-Z0-9_]{0,127}$/;
 
