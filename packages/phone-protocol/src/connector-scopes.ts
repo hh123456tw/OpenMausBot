@@ -17,7 +17,7 @@ export interface ConnectorScopes {
   apps: Record<string, ConnectorScope>;
 }
 
-const TOOLKIT_SLUG = /^[a-z0-9][a-z0-9_-]{0,63}$/;
+const TOOLKIT_SLUG = /^_?[a-z0-9][a-z0-9_-]{0,63}$/;
 
 /** The toolkit a Composio slug belongs to: the part before the first
  * underscore, lower-cased. A workbench API proxy belongs to no app. */

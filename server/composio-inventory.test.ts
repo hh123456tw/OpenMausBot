@@ -135,3 +135,22 @@ describe.each(["connected_accounts", "toolkits"])("self-hosted %s inventory", (w
     },
   );
 });
+
+describe("self-hosted inventory slugs", () => {
+  it("treats a toolkit slug that starts with an underscore as a complete inventory", async () => {
+    const cfg: AppConfig = { composio: { apiKey: `ak_inventory_${++backend}`, userId: "fixture", sessionId: "trs_inventory" } };
+    vi.stubEnv("OMB_COMPOSIO_API", "http://127.0.0.1:9876/api/v3.1");
+    vi.stubGlobal("fetch", async (input: string | URL | Request) => {
+      const url = new URL(String(input));
+      if (url.pathname.endsWith("/auth_configs")) return Response.json({ items: [] });
+      if (url.pathname.endsWith("/tool_router/session/trs_inventory")) return Response.json({
+        session_id: "trs_inventory", mcp: { type: "http", url: "http://127.0.0.1:9876/mcp" },
+        config: { user_id: "fixture", multi_account: { enable: true } },
+      });
+      if (url.pathname.endsWith("/toolkits")) return Response.json({ items: [{ slug: "_1password", connected_account: { id: "ca_1password" } }] });
+      if (url.pathname.endsWith("/connected_accounts")) return Response.json({ items: [{ id: "ca_1password", toolkit: { slug: "_1password" } }] });
+      throw new Error(`Unexpected inventory request: ${url}`);
+    });
+    await expect(composio.connectedServicesInventory(cfg)).resolves.toMatchObject({ complete: true });
+  });
+});

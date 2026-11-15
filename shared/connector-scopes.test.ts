@@ -44,7 +44,14 @@ describe("normalizeConnectorScopes", () => {
     expect(normalizeConnectorScopes({ apps: {} })).toEqual({ apps: {} });
   });
 
+  it("accepts a toolkit slug that starts with an underscore", () => {
+    expect(normalizeConnectorScopes({ apps: { _1password: "read" } })).toEqual({ apps: { _1password: "read" } });
+  });
+
   it("refuses anything else", () => {
+    expect(normalizeConnectorScopes({ apps: { "": "read" } })).toBeNull();
+    expect(normalizeConnectorScopes({ apps: { "-bad": "read" } })).toBeNull();
+    expect(normalizeConnectorScopes({ apps: { __twice: "read" } })).toBeNull();
     expect(normalizeConnectorScopes({ apps: { gmail: "admin" } })).toBeNull();
     expect(normalizeConnectorScopes({ apps: { "bad slug!": "read" } })).toBeNull();
     expect(normalizeConnectorScopes({ apps: [] })).toBeNull();
