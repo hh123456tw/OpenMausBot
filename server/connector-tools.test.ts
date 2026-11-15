@@ -12,3 +12,16 @@ describe("parseConnectorTools slugs", () => {
     }
   });
 });
+
+describe("parseConnectorTools tool names", () => {
+  it("accepts an underscore-leading tool name", () => {
+    expect(parseConnectorTools({ _1password: { tools: ["_1PASSWORD_GET_ITEM"] } }))
+      .toEqual({ ok: true, grants: { _1password: { tools: ["_1PASSWORD_GET_ITEM"] } } });
+  });
+
+  it("refuses a doubled underscore, an empty name, a digit start and lowercase", () => {
+    for (const tool of ["__PROTO__", "__TWICE_X", "", "1PASSWORD_X", "_1password_get_item", "gmail_send_email"]) {
+      expect(parseConnectorTools({ _1password: { tools: [tool] } }).ok, tool).toBe(false);
+    }
+  });
+});

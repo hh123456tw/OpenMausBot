@@ -28,6 +28,14 @@ describe("verb classes for tool names", () => {
     expect(classifyConnectorTool("SLACK_UPDATE_MESSAGE")).toBe("modify");
   });
 
+  it("reads an underscore-leading tool name", () => {
+    expect(classifyConnectorTool("_1PASSWORD_GET_ITEM")).toBe("read");
+    expect(classifyConnectorTool("_1PASSWORD_DELETE_ITEM")).toBe("delete");
+    expect(isConnectorToolGrantShape({ tools: ["_1PASSWORD_GET_ITEM"] })).toBe(true);
+    expect(isConnectorToolGrantShape({ tools: ["__PROTO__"] })).toBe(false);
+    expect(isConnectorToolGrantShape({ tools: ["1PASSWORD_X"] })).toBe(false);
+  });
+
   it("returns null for names outside the pattern or without a known verb", () => {
     expect(classifyConnectorTool("gmail_send_email")).toBeNull();
     expect(classifyConnectorTool("GMAIL_SNOOZE_THREAD")).toBeNull();

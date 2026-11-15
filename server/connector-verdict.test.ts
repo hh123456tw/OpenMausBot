@@ -115,6 +115,8 @@ describe("serviceSlugFor", () => {
     expect(serviceSlugFor("SLACK_POST_MESSAGE")).toBe("slack");
     expect(serviceSlugFor("GMAIL")).toBeNull();
     expect(serviceSlugFor("_SEND")).toBeNull();
+    expect(serviceSlugFor("_1PASSWORD_LIST_ITEMS")).toBe("_1password");
+    expect(serviceSlugFor("__PROTO_X")).toBeNull();
   });
 });
 
@@ -195,6 +197,16 @@ describe("evaluateConnectorTools", () => {
     expect(evaluateConnectorTools(["BLAND_AI_MAKE_CALL"], grants, ["bland_ai"]).denials).toEqual([
       { tool: "BLAND_AI_MAKE_CALL", service: "bland_ai", onGrantedService: false },
     ]);
+  });
+
+  it("holds an underscore-leading tool to its own service's grant", () => {
+    const grants: Record<string, ConnectorToolGrant> = { _1password: { tools: ["_1PASSWORD_GET_ITEM"] } };
+    expect(evaluateConnectorTools(["_1PASSWORD_GET_ITEM"], grants)).toMatchObject({ allowed: true, rule: "connectorTools._1password" });
+    expect(evaluateConnectorTools(["_1PASSWORD_DELETE_ITEM"], grants).denials).toEqual([
+      { tool: "_1PASSWORD_DELETE_ITEM", service: "_1password", onGrantedService: true },
+    ]);
+    expect(connectorCallFromFrame(toolsCall("_1PASSWORD_GET_ITEM", {}))).toEqual({ kind: "tools", invoked: "_1PASSWORD_GET_ITEM", names: ["_1PASSWORD_GET_ITEM"] });
+    expect(connectorCallFromFrame(toolsCall("__PROTO__", {}))).toMatchObject({ kind: "unrecognized" });
   });
 
   it("denies a name that maps to no service and judges a batch once per distinct tool", () => {

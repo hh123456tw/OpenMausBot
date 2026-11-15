@@ -272,6 +272,20 @@ describe("additive portable team backups", () => {
     }
   });
 
+  it("accepts an underscore-leading tool name in a backup and refuses malformed ones", () => {
+    const { store, routines, chief } = fixture();
+    store.patchBot(chief.id, { connectorTools: { _1password: { tools: ["_1PASSWORD_GET_ITEM"] } } });
+    const backup = createTeamBackup(store, routines.listRoutines(), "Granted team");
+    expect(parseTeamBackup(JSON.parse(JSON.stringify(backup))).bots.find((bot) => bot.key === chief.id)?.connectorTools).toEqual({
+      _1password: { tools: ["_1PASSWORD_GET_ITEM"] },
+    });
+    for (const tool of ["__PROTO__", "__TWICE_X", "", "1PASSWORD_X", "_1password_get_item", "gmail_send_email"]) {
+      const tampered = JSON.parse(JSON.stringify(backup)) as { bots: { key: string; connectorTools: unknown }[] };
+      tampered.bots[0].connectorTools = { _1password: { tools: [tool] } };
+      expect(() => parseTeamBackup(tampered), tool).toThrow();
+    }
+  });
+
   it("keeps a conversation that work from outside reached marked through backup and restore", () => {
     const { store, routines, chief } = fixture();
     const reached = store.createTask(chief.id, "Event chat", false)!.threadId;

@@ -31,6 +31,21 @@ describe("connector advertisement allowlist env", () => {
     expect(parseConnectorAllowedToolsEnv(JSON.stringify({ "-bad": { tools: "*" } }))).toBeNull();
   });
 
+  it("round-trips an underscore-leading tool name and refuses the malformed ones", () => {
+    const record = grants({ _1password: { tools: ["_1PASSWORD_GET_ITEM"] } });
+    const { env } = serializeConnectorAllowedTools(record);
+    expect(parseConnectorAllowedToolsEnv(env)).toEqual(record);
+    for (const tool of ["__PROTO__", "__TWICE_X", "", "1PASSWORD_X", "_1password_get_item", "gmail_send_email"]) {
+      expect(parseConnectorAllowedToolsEnv(JSON.stringify({ _1password: { tools: [tool] } })), tool).toBeNull();
+    }
+  });
+
+  it("advertises an underscore-leading tool on its own service without a candidate list", () => {
+    const record = grants({ _1password: { tools: ["_1PASSWORD_GET_ITEM"] } });
+    expect(connectorToolAdvertised("_1PASSWORD_GET_ITEM", record)).toBe(true);
+    expect(connectorToolAdvertised("_1PASSWORD_DELETE_ITEM", record)).toBe(false);
+  });
+
   it("keeps an underscore-leading slug in the service slug env", () => {
     const { env } = serializeConnectorServiceSlugs(["gmail", "_1password", "__proto__", "__twice", "", "-bad"]);
     expect(parseConnectorServiceSlugsEnv(env)).toEqual(["gmail", "_1password"]);
